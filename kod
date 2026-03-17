@@ -1,0 +1,24 @@
+ pip install scapy
+from scapy.all import *
+
+
+target_mac = "FF:FF:FF:FF:FF:FF" 
+
+
+spoofed_source_mac = "00:11:22:33:44:55" 
+
+
+dot3_frame = Dot3(dst=target_mac, src=spoofed_source_mac)
+
+
+llc_header = LLC(dsap=0x42, ssap=0x42, ctrl=3)
+
+
+payload = "Bu paket Scapy ile uretilmis sahte bir test paketidir."
+
+
+crafted_packet = dot3_frame / llc_header / payload
+
+
+print("Sahte LLC paketi ağa gönderiliyor...")
+sendp(crafted_packet, iface="eth0", count=5) 
