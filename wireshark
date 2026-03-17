@@ -1,0 +1,8 @@
+
+Spoofing (Sahtekarlık) Kısmı: Kod, ağdaki diğer cihazlara 00:11:22:33:44:55 MAC adresine sahip bir Switch'miş gibi davranıyor. Cihazlar bu paketin senden değil, o sahte adresten geldiğini zannediyor.
+
+LLC Manipülasyonu: dsap=0x42 ve ssap=0x42 diyerek paketin içine STP (Spanning Tree Protocol) kılığına girmesi için sinyal koyuyoruz.
+
+Wireshark Testi: Bu kodu çalıştırdıktan hemen sonra Wireshark'ı açıp filtre kısmına şunu yazarsan:
+llc.dsap == 0x42
+Kendi gönderdiğin bu paketi yakalayabilirsin. Wireshark'ta paketin detaylarına tıkladığında, içinde "Bu paket Scapy ile uretilmis sahte bir test paketidir" metnini ve sahte MAC adresini açıkça göreceksin.
