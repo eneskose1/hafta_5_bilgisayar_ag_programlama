@@ -1,0 +1,32 @@
+DSAP ve SSAP Nedir? (Ağ Bağlamında)
+OSI modelinin Veri Bağlantısı (Data Link) katmanı iki alt katmana ayrılır: MAC (Media Access Control) ve LLC (Logical Link Control). DSAP ve SSAP, IEEE 802.2 LLC başlığında bulunan iki önemli alandır.
+
+DSAP (Destination Service Access Point - Hedef Hizmet Erişim Noktası): Paketin alıcı cihazda (hedefte) hangi üst katman protokolüne veya servisine (örneğin IPv4, NetBIOS, IPX, STP) iletileceğini belirtir.
+
+SSAP (Source Service Access Point - Kaynak Hizmet Erişim Noktası): Paketin gönderici cihazda hangi protokolden/servisten yola çıktığını belirtir.
+
+Özetle; bu değerler, bir paketin donanım katmanından geldikten sonra işletim sistemi içinde doğru yazılıma/protokole yönlendirilmesini sağlayan "kapı numaralarıdır".
+
+2. DSAP/SSAP Üzerinden Hangi Açıklar Var ve Nasıl Hacking Yapılabilir?
+LLC başlıkları yapıları gereği herhangi bir şifreleme veya doğrulama (authentication) içermez. Bu durum, "Paket Üretme / Sahtekarlık (Packet Crafting/Spoofing)" saldırılarına zemin hazırlar:
+
+Protokol Sahtekarlığı (Spoofing): Bir saldırgan, Scapy veya benzeri ağ araçları kullanarak özel paketler (crafted packets) oluşturabilir. Bu paketlerin içine manuel olarak belirli DSAP ve SSAP değerleri yerleştirebilir. Örneğin; cihazları bu paketin bir ağ yönetim paketi olduğuna inandırabilir.
+
+Güvenlik Cihazlarını Atlatma: Ağdaki Güvenlik Duvarı (Firewall) veya Saldırı Tespit Sistemleri (IDS) sadece IP adreslerine veya portlara odaklanıp Layer 2 (LLC) başlıklarını derinlemesine incelemiyorsa, saldırgan zararlı veriyi nadir kullanılan DSAP/SSAP kodlarının arkasına gizleyerek ağa sızdırabilir.
+
+STP (Spanning Tree Protocol) Saldırıları: En yaygın Layer 2 saldırılarından biridir. STP paketleri (BPDU) genellikle 0x42 DSAP/SSAP değerlerini kullanır. Saldırgan, sürekli sahte 0x42 değerli BPDU paketleri üreterek Switch'leri kandırabilir. Bu sayede ağ topolojisini bozarak ağı çökertebilir (Denial of Service) veya trafiğin kendi bilgisayarı üzerinden akmasını sağlayarak (Ortadaki Adam - MitM saldırısı) verileri dinleyebilir.
+
+3. Wireshark'ta Sahte (Spoofed) Paket Nasıl Tespit Edilir?
+Bir paketin sahte olup olmadığını Wireshark üzerinden anlamak için sistemin normal davranışından sapan "anormalliklere" bakman gerekir:
+
+Mantıksız Başlık Uyumsuzlukları: En büyük ipucu budur. Örneğin, bir bilgisayarın (PC) MAC adresinden, sadece Switch'lerin göndermesi gereken bir protokol (örneğin DSAP 0x42 STP veya Cisco CDP) paketi geliyorsa, bu yüksek ihtimalle sahte bir pakettir.
+
+Wireshark Filtrelerini Kullanmak: Sadece LLC trafiğini görmek için Wireshark'ta şu filtreleri kullanabilirsin:
+
+llc.dsap veya llc.ssap (Örneğin: llc.dsap == 0x42)
+
+Ağınızda kullanılmayan, eski ve gereksiz protokol trafiği (örneğin IPX veya NetBIOS) görüyorsan, birisi ağda tarama yapıyor veya zafiyet arıyor olabilir.
+
+MAC OUI Kontrolü: Gönderici MAC adresinin ilk 3 byte'ı (OUI), cihazın üreticisini belirtir. Paket bir Cisco Switch'ten geliyormuş gibi davranıyor (LLC başlığında böyle görünüyor) ama MAC adresi bir "Realtek" veya "Intel" ağ kartına aitse, o paket sahtedir.
+
+Zamanlama ve Yoğunluk: Normalde birkaç saniyede bir gönderilmesi gereken ağ yönetim paketleri, bir anda saniyede binlerce kez geliyorsa (Flooding/Sel saldırısı), bu paketler bir saldırı aracı tarafından üretiliyordur. Wireshark'ın Statistics -> I/O Graphs menüsünden trafik anormalliklerini görebilirsin.
